@@ -121,18 +121,18 @@ export function hitTest(debug = false) {
 
     // Player size based on actual mesh size from Player.tsx
     // The visual model in Player.tsx uses boxGeometry args={[15, 15, 20]}
-    const playerSize = new THREE.Vector3(12, 12, 20); // Slightly smaller hitbox for more forgiving collisions
+    const playerSize = new THREE.Vector3(14, 14, 20); // Match visual size more closely
 
     const playerBox = new THREE.Box3(
       new THREE.Vector3(
         playerPosition.x - playerSize.x / 2,
         playerPosition.y - playerSize.y / 2,
-        playerPosition.z
+        0 // Start from ground level
       ),
       new THREE.Vector3(
         playerPosition.x + playerSize.x / 2,
         playerPosition.y + playerSize.y / 2,
-        playerPosition.z + playerSize.z
+        playerSize.z // Full height for accurate vertical collision
       )
     );
 
@@ -142,6 +142,11 @@ export function hitTest(debug = false) {
       const playerBoxEl = createDebugBox(playerBox, "lime", "Player");
       debugElements.push(playerBoxEl);
     }
+
+    // Add grace period tracking
+    const rowChangeGracePeriod = 300; // ms
+    const lastRowChangeTime = playerState.lastRowChangeTime || 0;
+    const isInGracePeriod = now - lastRowChangeTime < rowChangeGracePeriod;
 
     // Set up road boundaries
     const beginningOfRow = (minTileIndex - 2) * tileSize + tileCenterOffset;
@@ -168,21 +173,21 @@ export function hitTest(debug = false) {
           beginningOfRow + mod(baseOffset - elapsedTime * speed, distanceRange);
       }
 
-      // Adjusted vehicle size for more accurate collision detection
-      const vehicleSize = new THREE.Vector3(40, 25, 15); // Slightly smaller than visual size
+      // Adjusted vehicle size for pixel-perfect collision detection
+      const vehicleSize = new THREE.Vector3(38, 22, 20); // Match visual size exactly
 
-      // Calculate vehicleBox using the row's expected y coordinate rather than the player's
+      // Calculate vehicleBox using the row's expected y coordinate
       const vehicleY = playerState.currentRow * tileSize + tileCenterOffset;
       const vehicleBox = new THREE.Box3(
         new THREE.Vector3(
           vehicleX - vehicleSize.x / 2,
           vehicleY - vehicleSize.y / 2,
-          0
+          0 // Start from ground level
         ),
         new THREE.Vector3(
           vehicleX + vehicleSize.x / 2,
           vehicleY + vehicleSize.y / 2,
-          15
+          vehicleSize.z // Full height for accurate vertical collision
         )
       );
 
@@ -217,11 +222,12 @@ export function hitTest(debug = false) {
         );
       }
 
-      // Only process collision if enough time has passed since the last collision
+      // Only process collision if enough time has passed since the last collision and we're not in grace period
       if (
         isColliding &&
         shouldProcessCollision &&
-        now - lastCollisionTime > 500
+        now - lastCollisionTime > 500 &&
+        !isInGracePeriod
       ) {
         // Calculate overlap to decide if collision is valid
         const overlapX =
@@ -231,9 +237,9 @@ export function hitTest(debug = false) {
           Math.min(playerBox.max.y, vehicleBox.max.y) -
           Math.max(playerBox.min.y, vehicleBox.min.y);
 
-        // Require a more significant X overlap for collision to trigger
-        // This will avoid grazing collisions that don't look visually correct
-        if (overlapX > 10 && overlapY > 7) {
+        // Use more precise collision detection with smaller threshold
+        // Any significant overlap should count as a collision
+        if (overlapX > 5 && overlapY > 5) {
           lastCollisionTime = now;
 
           // Immediately handle the collision

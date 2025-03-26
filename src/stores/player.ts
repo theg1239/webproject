@@ -10,12 +10,14 @@ export const state: {
   movesQueue: MoveDirection[];
   cameraDirection: number; // Always 0 = forward (static camera)
   shouldForcePositionUpdate: boolean; // Flag to signal immediate position update
+  lastRowChangeTime: number; // Track when the player last changed rows
 } = {
   currentRow: 0,
   currentTile: 0,
   movesQueue: [],
   cameraDirection: 0, // Static - we only use this for player rotation, not camera
-  shouldForcePositionUpdate: false
+  shouldForcePositionUpdate: false,
+  lastRowChangeTime: 0
 };
 
 export function queueMove(direction: MoveDirection) {
@@ -32,6 +34,7 @@ export function queueMove(direction: MoveDirection) {
 
 export function stepCompleted() {
   const direction = state.movesQueue.shift();
+  const previousRow = state.currentRow;
 
   if (direction === "forward") {
     state.currentRow += 1;
@@ -41,6 +44,11 @@ export function stepCompleted() {
   if (direction === "backward") state.currentRow -= 1;
   if (direction === "left") state.currentTile -= 1;
   if (direction === "right") state.currentTile += 1;
+
+  // Update lastRowChangeTime if row changed
+  if (previousRow !== state.currentRow) {
+    state.lastRowChangeTime = Date.now();
+  }
 
   if (state.currentRow === useMapStore.getState().rows.length - 10) {
     useMapStore.getState().addRows();
@@ -54,6 +62,7 @@ export function resetPlayer() {
   state.currentTile = 0;
   state.movesQueue = [];
   state.cameraDirection = 0;
+  state.lastRowChangeTime = Date.now(); // Reset the row change time
 }
 
 // New function to initialize player position with immediate visual update
@@ -63,6 +72,7 @@ export function initializePlayerPosition() {
   state.currentTile = 0;
   state.movesQueue = [];
   state.cameraDirection = 0;
+  state.lastRowChangeTime = Date.now(); // Reset the row change time
   
   // Set flag to force position update on next animation frame
   state.shouldForcePositionUpdate = true;
