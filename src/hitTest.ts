@@ -4,14 +4,15 @@ import { state as playerState } from "./stores/player";
 import { minTileIndex, maxTileIndex, tileSize } from "./constants";
 import { gameState } from "./stores/gameState";
 
+// Track the last collision time to impose a cooldown
 let lastCollisionTime = 0;
+// Track the start time for vehicles’ cyclic motion; reset on game initialization
 let gameStartTime = Date.now();
 let debugElements: HTMLElement[] = [];
 let lastPlayerPosition: THREE.Vector3 | null = null;
 
 /**
- * Resets the game start time and collision timer.
- * Call this at every game initialization.
+ * Call this at every game initialization to reset the vehicle timing.
  */
 export function resetGameStartTime() {
   gameStartTime = Date.now();
@@ -82,11 +83,12 @@ export function hitTest(debug = false) {
     cleanupDebugVisualizations();
   }
 
+  // Only process collisions when the game is in playing state
   const shouldProcessCollision = gameState.current.screen === "playing";
 
-  // Only check collision if player is on a row where collision is possible
+  // Only check collision if the player is on a row where collision is possible
   const rowIndex = playerState.currentRow;
-  if (rowIndex <= 0) return; // On grass—no collision
+  if (rowIndex <= 0) return; // Player is on grass—no collision possible
   const rows = useMapStore.getState().rows;
   const row = rows[rowIndex - 1];
   if (!row) return;
@@ -96,7 +98,7 @@ export function hitTest(debug = false) {
     const playerPosition = new THREE.Vector3(
       playerState.currentTile * tileSize + tileCenterOffset,
       playerState.currentRow * tileSize + tileCenterOffset,
-      10 // Player's z position
+      10 // Player's z position remains constant
     );
 
     // Log player position if it changes (for debugging)
@@ -111,13 +113,13 @@ export function hitTest(debug = false) {
       lastPlayerPosition = playerPosition.clone();
     }
 
-    // Define player hitbox (match visual size closely)
+    // Define the player's hitbox using dimensions close to the visual model
     const playerSize = new THREE.Vector3(14, 14, 20);
     const playerBox = new THREE.Box3(
       new THREE.Vector3(
         playerPosition.x - playerSize.x / 2,
         playerPosition.y - playerSize.y / 2,
-        0 // start at ground level
+        0 // starting from ground level
       ),
       new THREE.Vector3(
         playerPosition.x + playerSize.x / 2,
@@ -132,8 +134,8 @@ export function hitTest(debug = false) {
       debugElements.push(playerBoxEl);
     }
 
-    // Grace period after row change (in ms)
-    const rowChangeGracePeriod = 300;
+    // Add a grace period after a row change to avoid false collision triggers
+    const rowChangeGracePeriod = 300; // in milliseconds
     const lastRowChangeTime = playerState.lastRowChangeTime || 0;
     const isInGracePeriod = now - lastRowChangeTime < rowChangeGracePeriod;
 
@@ -142,27 +144,27 @@ export function hitTest(debug = false) {
     const endOfRow = (maxTileIndex + 2) * tileSize + tileCenterOffset;
     const distanceRange = endOfRow - beginningOfRow;
 
-    // Compute speed per millisecond
+    // Compute the speed in units per millisecond and a cycle time for vehicles to traverse the row
     const speedPerMs = row.speed / 1000;
-    // Calculate the cycle time (ms to traverse the row)
     const cycleTime = distanceRange / speedPerMs;
     // Use modulo arithmetic so positions wrap smoothly
     const elapsed = (now - gameStartTime) % cycleTime;
 
-    let vehicleX: number;
     for (const vehicle of row.vehicles) {
       const baseX = vehicle.initialTileIndex * tileSize + tileCenterOffset;
       const baseOffset = baseX - beginningOfRow;
+      let vehicleX: number;
       if (row.direction) {
-        // Moving to the right
+        // Vehicle moves to the right
         vehicleX = beginningOfRow + mod(baseOffset + elapsed * speedPerMs, distanceRange);
       } else {
-        // Moving to the left
+        // Vehicle moves to the left
         vehicleX = beginningOfRow + mod(baseOffset - elapsed * speedPerMs, distanceRange);
       }
 
-      // Use a hitbox size that matches the visual size closely
-      const vehicleSize = new THREE.Vector3(38, 22, 20);
+      // Define the vehicle hitbox using the tank hull dimensions.
+      // This covers the full visual extent of the car so that if the player enters it midway, the collision is detected.
+      const vehicleSize = new THREE.Vector3(60, 30, 15); 
       const vehicleY = playerState.currentRow * tileSize + tileCenterOffset;
       const vehicleBox = new THREE.Box3(
         new THREE.Vector3(
@@ -178,8 +180,9 @@ export function hitTest(debug = false) {
       );
 
       if (debug) {
-        const isColliding = playerBox.intersectsBox(vehicleBox);
-        const color = isColliding ? "red" : "yellow";
+        // Use a different color if collision is detected
+        const collidingDebug = playerBox.intersectsBox(vehicleBox) || vehicleBox.containsPoint(playerPosition);
+        const color = collidingDebug ? "red" : "yellow";
         const distance = Math.abs(vehicleX - playerPosition.x);
         const vehicleBoxEl = createDebugBox(
           vehicleBox,
@@ -189,47 +192,18 @@ export function hitTest(debug = false) {
         debugElements.push(vehicleBoxEl);
       }
 
-      const isColliding = playerBox.intersectsBox(vehicleBox);
-      if (debug && isColliding) {
-        const overlapX =
-          Math.min(playerBox.max.x, vehicleBox.max.x) -
-          Math.max(playerBox.min.x, vehicleBox.min.x);
-        const overlapY =
-          Math.min(playerBox.max.y, vehicleBox.max.y) -
-          Math.max(playerBox.min.y, vehicleBox.min.y);
-        console.log(
-          `COLLISION DETECTED with vehicle at tile ${vehicle.initialTileIndex}! Overlap: X=${overlapX.toFixed(
-            1
-          )}, Y=${overlapY.toFixed(1)}`
-        );
-      }
+      // Use a combined collision test:
+      // either the player hitbox intersects the vehicle hitbox
+      // or the player's center is contained within the vehicle hitbox.
+      const isColliding = playerBox.intersectsBox(vehicleBox) || vehicleBox.containsPoint(playerPosition);
 
-      // Process collision if:
-      // - a collision is detected,
-      // - the game is in playing state,
-      // - enough time has passed since the last collision (cooldown now 100ms),
-      // - and we are not in a grace period.
-      if (
-        isColliding &&
-        shouldProcessCollision &&
-        now - lastCollisionTime > 100 &&
-        !isInGracePeriod
-      ) {
-        const overlapX =
-          Math.min(playerBox.max.x, vehicleBox.max.x) -
-          Math.max(playerBox.min.x, vehicleBox.min.x);
-        const overlapY =
-          Math.min(playerBox.max.y, vehicleBox.max.y) -
-          Math.max(playerBox.min.y, vehicleBox.min.y);
-
-        if (overlapX > 5 && overlapY > 5) {
-          lastCollisionTime = now;
-          playerState.movesQueue = [];
-          gameState.setScreen("game-over");
-          gameState.notifyListeners();
-          document.body.classList.add("game-over");
-          break;
-        }
+      if (isColliding && shouldProcessCollision && now - lastCollisionTime > 100 && !isInGracePeriod) {
+        lastCollisionTime = now;
+        playerState.movesQueue = [];
+        gameState.setScreen("game-over");
+        gameState.notifyListeners();
+        document.body.classList.add("game-over");
+        break;
       }
     }
   }
