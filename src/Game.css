@@ -1,0 +1,319 @@
+@import url("https://fonts.googleapis.com/css?family=Press+Start+2P");
+
+.game-title {
+  font-family: "Press Start 2P", cursive;
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-light);
+  font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8);
+}
+
+.game-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  aspect-ratio: 16/9;
+  height: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--surface-dark);
+  position: relative;
+}
+
+.game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  font-family: "Press Start 2P", cursive;
+}
+
+.score-display {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  font-family: "Press Start 2P", cursive;
+  font-size: 14px;
+  color: var(--text-light);
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 8px 12px;
+  border: 2px solid var(--text-light);
+  border-radius: 0;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.7);
+  image-rendering: pixelated;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-display span {
+  color: #ffcc00;
+}
+
+.pause-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background-color: var(--surface-dark);
+  color: var(--text-light);
+  border: 2px solid var(--text-light);
+  border-radius: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: "Press Start 2P", cursive;
+  image-rendering: pixelated;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+  padding: 0;
+  line-height: 1;
+}
+
+.pause-btn:hover {
+  transform: scale(1.05);
+}
+
+.pause-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+.game-ui-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--background-dark);
+  background-image: radial-gradient(circle, #2c2c2c 10%, transparent 10%), 
+                    radial-gradient(circle, #2c2c2c 10%, transparent 10%);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Menu styles */
+.title {
+  font-family: "Press Start 2P", cursive;
+  color: var(--text-light);
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+  font-size: 36px;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.btn {
+  background-color: var(--surface-dark);
+  color: var(--text-light);
+  font-family: "Press Start 2P", cursive;
+  padding: 12px 24px;
+  border: 3px solid var(--text-light);
+  border-radius: 0;
+  font-size: 16px;
+  cursor: pointer;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.7);
+  transition: all 0.1s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.7);
+}
+
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7);
+}
+
+.game-instructions {
+  margin-top: 30px;
+  color: var(--text-light);
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.menu-content {
+  color: var(--text-light);
+  font-family: "Press Start 2P", cursive;
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: center;
+  margin-bottom: 30px;
+  max-width: 500px;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px;
+    aspect-ratio: 4/3;
+  }
+  
+  .pause-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .game-title {
+    font-size: 18px;
+  }
+  
+  .score-display {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  
+  .title {
+    font-size: 28px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 180px;
+  }
+  
+  .game-instructions {
+    font-size: 10px;
+  }
+  
+  .menu-content {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-container {
+    padding: 5px;
+  }
+  
+  .game-title {
+    font-size: 14px;
+  }
+  
+  .score-display {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: 150px;
+  }
+  
+  .game-instructions {
+    font-size: 8px;
+  }
+  
+  .menu-content {
+    font-size: 10px;
+  }
+}
+
+/* Game Over Dialog */
+#result-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  visibility: hidden; /* Hidden by default */
+  opacity: 0;
+  transition: opacity 0.05s ease-in-out; /* Much faster transition */
+  pointer-events: none; /* Don't block clicks until visible */
+}
+
+#result-container.visible {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.05s ease-in-out; /* Much faster transition */
+  pointer-events: all; /* Allow interactions when visible */
+}
+
+#result {
+  background-color: var(--surface-dark);
+  padding: 30px;
+  border: 4px solid var(--text-light);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+  text-align: center;
+  color: var(--text-light);
+  font-family: "Press Start 2P", cursive;
+  width: 80%;
+  max-width: 400px;
+  transform: scale(0.95);
+  transition: transform 0.05s ease-in-out; /* Much faster transition */
+}
+
+#result-container.visible #result {
+  transform: scale(1);
+}
+
+#result h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #ff4d4d;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8);
+}
+
+#result p {
+  font-size: 16px;
+  margin-bottom: 25px;
+}
+
+#final-score {
+  color: #ffcc00;
+}
+
+/* Remove these styles since we're using .btn class now */
+#retry, #quit {
+  margin: 0 10px;
+}
+
+/* Game over state */
+body.game-over .game canvas {
+  pointer-events: none;
+}
+
+body.game-over .pause-btn {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+body.game-over .controls {
+  pointer-events: none;
+  opacity: 0.5;
+}
